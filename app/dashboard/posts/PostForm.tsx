@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Resolver, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,7 @@ export default function PostForm({
     watch,
     setValue,
   } = useForm<PostValues>({
-    resolver: zodResolver(PostSchema) as any,
+    resolver: zodResolver(PostSchema) as Resolver<PostValues>,
     defaultValues: initialData ?? {
       title: "",
       slug: "",
@@ -72,7 +72,7 @@ export default function PostForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titleValue]);
 
-  const onSubmit = async (values: PostValues) => {
+  const onSubmit: SubmitHandler<PostValues> = async (values) => {
     setErrorMessage(null);
     const endpoint = isEdit ? `/api/blogs/${initialData?.id}` : "/api/blogs";
     const method = isEdit ? "PUT" : "POST";
@@ -94,7 +94,7 @@ export default function PostForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium">Title</label>
         <input

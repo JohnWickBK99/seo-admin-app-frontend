@@ -1,13 +1,9 @@
 import { supabaseServerClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 
-interface RouteProps {
-    params: { id: string };
-}
-
 // GET /api/blog_posts/:id – Lấy chi tiết blog post
-export async function GET(_request: NextRequest, { params }: RouteProps) {
-    const { id } = params;
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const { data, error } = await supabaseServerClient
         .from("blog_posts")
         .select("*")
@@ -21,8 +17,8 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
 }
 
 // PUT /api/blog_posts/:id – Cập nhật blog post
-export async function PUT(request: NextRequest, { params }: RouteProps) {
-    const { id } = params;
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const body = await request.json();
 
     const { data, error } = await supabaseServerClient
@@ -39,8 +35,8 @@ export async function PUT(request: NextRequest, { params }: RouteProps) {
 }
 
 // DELETE /api/blog_posts/:id – Xoá blog post
-export async function DELETE(_request: NextRequest, { params }: RouteProps) {
-    const { id } = params;
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const { error } = await supabaseServerClient
         .from("blog_posts")
         .delete()

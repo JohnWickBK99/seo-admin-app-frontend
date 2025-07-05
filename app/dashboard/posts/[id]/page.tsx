@@ -14,11 +14,7 @@ async function getPost(id: string) {
   return res.json();
 }
 
-export default async function EditPostPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const post = await getPost(id);
   if (!post) notFound();
