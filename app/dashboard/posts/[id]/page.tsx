@@ -1,17 +1,18 @@
 import PostForm from "../PostForm";
+import { supabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 
 async function getPost(id: string) {
-  const base =
-    process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
-  const res = await fetch(`${base}/api/blogs/${id}`, {
-    cache: "no-store",
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Failed to fetch");
-  return res.json();
+  const { data, error } = await supabaseServerClient
+    .from("blog_posts")
+    .select(
+      "id, title, slug, excerpt, content, author, category, read_time, featured, published"
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {

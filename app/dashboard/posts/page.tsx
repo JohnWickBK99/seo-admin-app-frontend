@@ -1,18 +1,16 @@
 import PostTable from "./PostTable";
 import Link from "next/link";
+import { supabaseServerClient } from "@/lib/supabase-server";
 
+// Data is fetched on the server via Supabase instead of hitting our internal API
 async function fetchPosts() {
-  const base =
-    process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
-  const res = await fetch(`${base}/api/blogs`, {
-    // Luôn lấy dữ liệu mới nhất
-    cache: "no-store",
-  });
+  const { data, error } = await supabaseServerClient
+    .from("blog_posts")
+    .select("id, title, slug, author, published_at, published")
+    .order("published_at", { ascending: false });
 
-  if (!res.ok) throw new Error("Failed to fetch posts");
-  return res.json();
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export default async function PostsPage() {
