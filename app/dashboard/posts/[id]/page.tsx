@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi request
+
 import PostForm from "../PostForm";
 import { supabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
@@ -15,7 +17,11 @@ async function getPost(id: string) {
   return data;
 }
 
-export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditPostPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const post = await getPost(id);
   if (!post) notFound();
