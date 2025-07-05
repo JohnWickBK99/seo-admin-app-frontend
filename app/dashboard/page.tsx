@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi request
+
 import { supabaseServerClient } from "@/lib/supabase-server";
 import PostsPerMonthChart from "@/components/PostsPerMonthChart";
 
