@@ -74,7 +74,7 @@ export default function PostForm({
 
   const onSubmit = async (values: PostValues) => {
     setErrorMessage(null);
-    const endpoint = isEdit ? `/api/blog/${initialData?.id}` : "/api/blogs";
+    const endpoint = isEdit ? `/api/blogs/${initialData?.id}` : "/api/blogs";
     const method = isEdit ? "PUT" : "POST";
 
     const res = await fetch(endpoint, {

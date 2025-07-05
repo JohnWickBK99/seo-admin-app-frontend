@@ -17,7 +17,7 @@ export default function PostTable({ posts }: { posts: Post[] }) {
   const handleDelete = async (id: string) => {
     const ok = confirm("Are you sure you want to delete this post?");
     if (!ok) return;
-    const res = await fetch(`/api/blog/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
     if (res.ok) {
       setData((prev) => prev.filter((p) => p.id !== id));
     } else {

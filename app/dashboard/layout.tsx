@@ -16,18 +16,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           >
             Posts
           </Link>
-          <Link
-            href="/dashboard/categories"
-            className="hover:text-white/80 transition"
-          >
-            Categories
-          </Link>
-          <Link
-            href="/dashboard/users"
-            className="hover:text-white/80 transition"
-          >
-            Users
-          </Link>
         </nav>
       </aside>
       <main className="flex-1 p-10 overflow-y-auto">{children}</main>
