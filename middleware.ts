@@ -1,15 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-export function middleware(request: NextRequest) {
-    const token = request.cookies.get("sb-access-token");
+export async function middleware(req: NextRequest) {
+    const res = NextResponse.next();
 
-    if (!token) {
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
+    // Create Supabase client on the Edge
+    const supabase = createMiddlewareClient({ req, res });
 
-    return NextResponse.next();
+    // Refresh session if needed & set cookies
+    await supabase.auth.getSession();
+
+    // Protect dashboard routes
+    if (req.nextUrl.pathname.startsWith("/dashboard")) {
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+
+      if (!session) {
+          return NextResponse.redirect(new URL("/login", req.url));
+      }
+  }
+
+    return res;
 }
 
 export const config = {
-    matcher: ["/dashboard/:path*"],
+    matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 }; 

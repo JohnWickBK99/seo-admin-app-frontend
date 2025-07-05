@@ -37,6 +37,7 @@ export default function LoginForm() {
       return;
     }
     router.push("/dashboard");
+    console.log("Login successful");
   };
 
   return (
