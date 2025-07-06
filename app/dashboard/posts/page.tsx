@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi request
+
 import PostTable from "./PostTable";
 import Link from "next/link";
 import { supabaseServerClient } from "@/lib/supabase-server";
