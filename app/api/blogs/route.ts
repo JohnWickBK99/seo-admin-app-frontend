@@ -1,31 +1,27 @@
-import { supabaseServerClient } from "@/lib/supabase-server";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/blog_posts – Lấy danh sách tất cả blog posts
 export async function GET() {
-    const { data, error } = await supabaseServerClient
-        .from("blog_posts")
-        .select("*")
-        .order("published_at", { ascending: false });
-
-    if (error)
+    try {
+        const data = await prisma.blog_posts.findMany({
+            orderBy: { published_at: "desc" },
+        });
+        return NextResponse.json(data);
+    } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 500 });
-
-    return NextResponse.json(data);
+    }
 }
 
 // POST /api/blog_posts – Tạo blog post mới
 export async function POST(request: NextRequest) {
-    const body = await request.json();
-
-    const { data, error } = await supabaseServerClient
-        .from("blog_posts")
-        .insert(body)
-        .select("*")
-        .single();
-
-    if (error)
+    try {
+        const body = await request.json();
+        const data = await prisma.blog_posts.create({
+            data: body,
+        });
+        return NextResponse.json(data, { status: 201 });
+    } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 500 });
-
-    return NextResponse.json(data, { status: 201 });
+    }
 } 

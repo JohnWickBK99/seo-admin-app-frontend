@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 
 const LoginSchema = z.object({
   email: z.string().email({ message: "Invalid email" }),
@@ -17,6 +17,8 @@ type LoginValues = z.infer<typeof LoginSchema>;
 export default function LoginForm() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const {
     register,
@@ -28,12 +30,13 @@ export default function LoginForm() {
 
   const onSubmit = async (values: LoginValues) => {
     setErrorMessage(null);
-    const { error } = await supabase.auth.signInWithPassword({
+    const res = await signIn("credentials", {
+      redirect: false,
       email: values.email,
       password: values.password,
     });
-    if (error) {
-      setErrorMessage(error.message);
+    if (res?.error) {
+      setErrorMessage("Invalid email or password");
       return;
     }
     router.push("/dashboard");
@@ -51,6 +54,10 @@ export default function LoginForm() {
           type="email"
           className="w-full rounded border px-3 py-2"
           {...register("email")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
         />
         {errors.email && (
           <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -66,6 +73,10 @@ export default function LoginForm() {
           type="password"
           className="w-full rounded border px-3 py-2"
           {...register("password")}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          required
         />
         {errors.password && (
           <p className="text-sm text-red-600">{errors.password.message}</p>

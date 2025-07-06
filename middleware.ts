@@ -1,29 +1,19 @@
 import { NextResponse, NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
-    const res = NextResponse.next();
-
-    // Create Supabase client on the Edge
-    const supabase = createMiddlewareClient({ req, res });
-
-    // Refresh session if needed & set cookies
-    await supabase.auth.getSession();
-
-    // Protect dashboard routes
+    // Chỉ bảo vệ route /dashboard
     if (req.nextUrl.pathname.startsWith("/dashboard")) {
-        const {
-            data: { session },
-        } = await supabase.auth.getSession();
-
-      if (!session) {
-          return NextResponse.redirect(new URL("/login", req.url));
-      }
-  }
-
-    return res;
+        // Lấy token từ cookie (NextAuth JWT)
+        const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+        // Nếu chưa đăng nhập hoặc không phải admin thì redirect về /login
+        if (!token || token.role !== "admin") {
+            return NextResponse.redirect(new URL("/login", req.url));
+        }
+    }
+    return NextResponse.next();
 }
 
 export const config = {
-    matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+    matcher: ["/dashboard/:path*"],
 }; 
