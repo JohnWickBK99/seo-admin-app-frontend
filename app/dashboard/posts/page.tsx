@@ -4,6 +4,16 @@ import PostTable from "./PostTable";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+// Định nghĩa type cho post
+type BlogPost = {
+  id: string;
+  title: string;
+  slug: string;
+  author: string;
+  published_at: Date | null;
+  published: boolean | null;
+};
+
 // Data is fetched on the server via Prisma
 async function fetchPosts() {
   const data = await prisma.blog_posts.findMany({
@@ -35,7 +45,7 @@ export default async function PostsPage() {
         </Link>
       </div>
       <PostTable
-        posts={posts.map((post) => ({
+        posts={posts.map((post: BlogPost) => ({
           ...post,
           published_at: post.published_at
             ? post.published_at.toISOString()
