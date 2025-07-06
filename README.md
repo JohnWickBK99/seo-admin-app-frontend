@@ -50,3 +50,53 @@ This is an open template. You can fork and develop it further for your own needs
 Easily deploy with [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
 
 See more [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
+
+
+## Using Prisma ORM
+
+### 1. Install dependencies
+
+```bash
+pnpm add @prisma/client
+pnpm add -D prisma
+```
+
+### 2. Configure database connection
+
+Create a `.env` file in the project root and add your database connection string:
+
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/your_database_name"
+```
+
+### 3. Generate Prisma Client
+
+```bash
+pnpm prisma generate
+```
+
+### 4. Push schema to database (create tables)
+
+```bash
+pnpm prisma db push
+```
+
+Or, to use migrations:
+
+```bash
+pnpm prisma migrate dev --name init
+```
+
+### 5. Open Prisma Studio (optional)
+
+```bash
+pnpm prisma studio
+```
+
+### 6. Use Prisma Client in your code
+
+```ts
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+// ... your queries here ...
+```
