@@ -2,16 +2,21 @@ export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi req
 
 import PostTable from "./PostTable";
 import Link from "next/link";
-import { supabaseServerClient } from "@/lib/supabase-server";
+import { prisma } from "@/lib/prisma";
 
-// Data is fetched on the server via Supabase instead of hitting our internal API
+// Data is fetched on the server via Prisma
 async function fetchPosts() {
-  const { data, error } = await supabaseServerClient
-    .from("blog_posts")
-    .select("id, title, slug, author, published_at, published")
-    .order("published_at", { ascending: false });
-
-  if (error) throw new Error(error.message);
+  const data = await prisma.blog_posts.findMany({
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      author: true,
+      published_at: true,
+      published: true,
+    },
+    orderBy: { published_at: "desc" },
+  });
   return data;
 }
 

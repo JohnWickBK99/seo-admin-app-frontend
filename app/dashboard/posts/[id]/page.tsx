@@ -1,19 +1,25 @@
 export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi request
 
 import PostForm from "../PostForm";
-import { supabaseServerClient } from "@/lib/supabase-server";
+import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 
 async function getPost(id: string) {
-  const { data, error } = await supabaseServerClient
-    .from("blog_posts")
-    .select(
-      "id, title, slug, excerpt, content, author, category, read_time, featured, published"
-    )
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
+  const data = await prisma.blog_posts.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      content: true,
+      author: true,
+      category: true,
+      read_time: true,
+      featured: true,
+      published: true,
+    },
+  });
   return data;
 }
 

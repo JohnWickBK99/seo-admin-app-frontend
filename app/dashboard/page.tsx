@@ -1,34 +1,27 @@
 export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi request
 
-import { supabaseServerClient } from "@/lib/supabase-server";
+import { prisma } from "@/lib/prisma";
 import PostsPerMonthChart from "@/components/PostsPerMonthChart";
 
 export default async function DashboardPage() {
   // Đếm tổng số bài, số đã publish, số draft
-  const [{ count: total }, { count: publishedCount }, { count: draftCount }] =
-    await Promise.all([
-      supabaseServerClient
-        .from("blog_posts")
-        .select("*", { count: "exact", head: true }),
-      supabaseServerClient
-        .from("blog_posts")
-        .select("*", { count: "exact", head: true })
-        .eq("published", true),
-      supabaseServerClient
-        .from("blog_posts")
-        .select("*", { count: "exact", head: true })
-        .eq("published", false),
-    ]);
+  const [total, publishedCount, draftCount] = await Promise.all([
+    prisma.blog_posts.count(),
+    prisma.blog_posts.count({ where: { published: true } }),
+    prisma.blog_posts.count({ where: { published: false } }),
+  ]);
 
   // Thống kê 6 tháng gần nhất
   const now = new Date();
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-
-  const { data: recentPosts } = await supabaseServerClient
-    .from("blog_posts")
-    .select("id, published_at")
-    .eq("published", true)
-    .gte("published_at", sixMonthsAgo.toISOString());
+  const recentPosts: { id: string; published_at: Date | null }[] =
+    await prisma.blog_posts.findMany({
+      where: {
+        published: true,
+        published_at: { gte: sixMonthsAgo },
+      },
+      select: { id: true, published_at: true },
+    });
 
   // Tính tổng mỗi tháng
   const monthStatsMap = new Map<string, number>();
@@ -41,7 +34,7 @@ export default async function DashboardPage() {
     monthStatsMap.set(label, 0);
   }
 
-  recentPosts?.forEach((p) => {
+  recentPosts.forEach((p: { id: string; published_at: Date | null }) => {
     const date = p.published_at ? new Date(p.published_at) : null;
     if (!date) return;
     const label = date.toLocaleDateString("en-US", {
