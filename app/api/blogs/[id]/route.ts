@@ -12,8 +12,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
             return NextResponse.json({ message: "Not found" }, { status: 404 });
         }
         return NextResponse.json(data);
-    } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return NextResponse.json({ message }, { status: 500 });
     }
 }
 
@@ -27,11 +28,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             data: body,
         });
         return NextResponse.json(data);
-    } catch (error: any) {
-        if (error.code === 'P2025') {
+    } catch (error: unknown) {
+        if (typeof error === 'object' && error && 'code' in error && (error as { code?: string }).code === 'P2025') {
             return NextResponse.json({ message: "Not found" }, { status: 404 });
         }
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return NextResponse.json({ message }, { status: 500 });
     }
 }
 
@@ -43,10 +45,11 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
             where: { id },
         });
         return NextResponse.json({ message: "Deleted" }, { status: 204 });
-    } catch (error: any) {
-        if (error.code === 'P2025') {
+    } catch (error: unknown) {
+        if (typeof error === 'object' && error && 'code' in error && (error as { code?: string }).code === 'P2025') {
             return NextResponse.json({ message: "Not found" }, { status: 404 });
         }
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return NextResponse.json({ message }, { status: 500 });
     }
 } 

@@ -35,7 +35,17 @@ export default async function EditPostPage({
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Edit Post</h1>
-      <PostForm initialData={post} isEdit />
+      <PostForm
+        initialData={{
+          ...post,
+          featured: post.featured ?? undefined,
+          published: post.published ?? undefined,
+          excerpt: post.excerpt ?? undefined,
+          read_time: post.read_time ?? undefined,
+          category: post.category ?? undefined,
+        }}
+        isEdit
+      />
     </div>
   );
 }

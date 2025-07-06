@@ -8,8 +8,9 @@ export async function GET() {
             orderBy: { published_at: "desc" },
         });
         return NextResponse.json(data);
-    } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return NextResponse.json({ message }, { status: 500 });
     }
 }
 
@@ -21,7 +22,8 @@ export async function POST(request: NextRequest) {
             data: body,
         });
         return NextResponse.json(data, { status: 201 });
-    } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return NextResponse.json({ message }, { status: 500 });
     }
 } 

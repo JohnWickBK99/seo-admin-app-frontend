@@ -6,7 +6,7 @@ import { compare } from "bcryptjs";
 import type { NextAuthOptions, Session, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
         CredentialsProvider({
@@ -32,14 +32,14 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }: { session: Session; token: JWT }) {
             // Attach role and id to session
             if (session.user) {
-                (session.user as any).role = token.role;
-                (session.user as any).id = token.id;
+                (session.user as { role?: string; id?: string }).role = typeof token.role === 'string' ? token.role : undefined;
+                (session.user as { role?: string; id?: string }).id = typeof token.id === 'string' ? token.id : undefined;
             }
             return session;
         },
         async jwt({ token, user }: { token: JWT; user?: User }) {
             if (user) {
-                token.role = (user as any).role;
+                token.role = (user as { role?: string }).role;
                 token.id = user.id;
             }
             return token;

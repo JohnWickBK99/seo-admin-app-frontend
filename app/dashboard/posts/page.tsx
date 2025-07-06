@@ -34,7 +34,15 @@ export default async function PostsPage() {
           New Post
         </Link>
       </div>
-      <PostTable posts={posts} />
+      <PostTable
+        posts={posts.map((post) => ({
+          ...post,
+          published_at: post.published_at
+            ? post.published_at.toISOString()
+            : null,
+          published: post.published ?? false,
+        }))}
+      />
     </div>
   );
 }
