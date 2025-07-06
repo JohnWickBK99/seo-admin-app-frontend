@@ -35,6 +35,7 @@ export default function LoginForm() {
       email: values.email,
       password: values.password,
     });
+    console.log("res", res);
     if (res?.error) {
       setErrorMessage("Invalid email or password");
       return;
