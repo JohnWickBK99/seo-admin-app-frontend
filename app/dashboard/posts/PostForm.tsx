@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ContentRenderer } from "@/components/ContentRenderer";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { UrlContentImport } from "@/components/ui/url-content-import";
 
 // Import shadcn-ui components
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,9 @@ const PostSchema = z.object({
   published: z.boolean().default(true),
 });
 
+// Log schema cho debug
+console.log("Post Schema initialized");
+
 type PostFormValues = z.infer<typeof PostSchema>;
 
 interface PostFormProps {
@@ -51,6 +55,7 @@ export default function PostForm({
   const [publishedChecked, setPublishedChecked] = useState<boolean>(
     initialData?.published ?? true
   );
+  const [showUrlImport, setShowUrlImport] = useState<boolean>(false);
 
   // Create form with type assertion to avoid complex type issues
   const form = useForm({
@@ -73,6 +78,13 @@ export default function PostForm({
   // Extract form methods
   const { register, handleSubmit, formState, watch, setValue } = form;
   const { errors, isSubmitting } = formState;
+
+  // Log validation errors để debug
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.log("Form validation errors:", errors);
+    }
+  }, [errors]);
 
   // Watch values for preview and slug generation
   const titleValue = watch("title");
@@ -103,6 +115,7 @@ export default function PostForm({
   const onSubmit = async (data: any) => {
     try {
       setErrorMessage(null);
+      console.log("Form submitted", data); // Thêm logging để debug
       const endpoint = isEdit ? `/api/blogs/${initialData?.id}` : "/api/blogs";
       const method = isEdit ? "PUT" : "POST";
 
@@ -118,20 +131,87 @@ export default function PostForm({
 
       if (!res.ok) {
         const responseData = await res.json();
-        setErrorMessage(responseData.message ?? "Something went wrong");
+        const errorMsg = responseData.message ?? "Something went wrong";
+        console.error("API Error:", errorMsg);
+        setErrorMessage(errorMsg);
         return;
       }
 
+      console.log("Form submitted successfully");
       // Navigate back to posts list on success
       router.push("/dashboard/posts");
     } catch (error) {
+      console.error("Submit error:", error);
       setErrorMessage("An unexpected error occurred");
-      console.error(error);
     }
   };
 
+  // Xử lý khi nội dung được tạo từ URL
+  const handleContentGenerated = (content: {
+    title: string;
+    content: string;
+    excerpt?: string;
+    author?: string;
+    category?: string;
+    read_time?: string;
+    word_count?: number;
+    image_url?: string;
+  }) => {
+    // Điền các trường từ nội dung được tạo
+    setValue("title", content.title);
+    setValue("content", content.content);
+
+    if (content.excerpt) {
+      setValue("excerpt", content.excerpt);
+    }
+
+    if (content.author) {
+      setValue("author", content.author);
+    }
+
+    if (content.category) {
+      setValue("category", content.category);
+    }
+
+    if (content.read_time) {
+      setValue("read_time", content.read_time);
+    }
+
+    if (content.image_url) {
+      setValue("image_url", content.image_url);
+    }
+
+    // Ẩn form nhập URL sau khi nội dung được tạo
+    setShowUrlImport(false);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        console.log("Form onSubmit event fired");
+        handleSubmit(onSubmit)(e);
+      }}
+      className="space-y-6"
+    >
+      {!isEdit && (
+        <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-medium">Tạo nội dung tự động</h2>
+            <Button
+              type="button"
+              variant={showUrlImport ? "default" : "outline"}
+              onClick={() => setShowUrlImport(!showUrlImport)}
+            >
+              {showUrlImport ? "Ẩn" : "Tạo từ URL"}
+            </Button>
+          </div>
+
+          {showUrlImport && (
+            <UrlContentImport onContentGenerated={handleContentGenerated} />
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input id="title" {...register("title")} />
@@ -272,7 +352,12 @@ export default function PostForm({
         <p className="text-center text-destructive text-sm">{errorMessage}</p>
       )}
 
-      <Button type="submit" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        onClick={() => console.log("Submit button clicked")}
+        className="z-50 relative"
+      >
         {isSubmitting ? "Saving..." : isEdit ? "Update Post" : "Create Post"}
       </Button>
     </form>
