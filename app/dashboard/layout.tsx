@@ -9,6 +9,7 @@ import { signOut } from "next-auth/react";
 import { SidebarNav } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const sidebarNavItems = [
   {
@@ -31,10 +32,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="container flex flex-col md:flex-row py-4">
         <aside className="w-full md:w-64 mb-6 md:mb-0 md:mr-6">
           <div className="py-2">
-            <div className="mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold tracking-tight">
                 Admin Dashboard
               </h2>
+              <ThemeToggle />
             </div>
             <SidebarNav items={sidebarNavItems} />
             <Separator className="my-4" />

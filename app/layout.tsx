@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -32,7 +33,9 @@ export default function RootLayout({
           geistMono.variable
         )}
       >
-        <div className="relative flex min-h-screen flex-col">{children}</div>
+        <ThemeProvider>
+          <div className="relative flex min-h-screen flex-col">{children}</div>
+        </ThemeProvider>
       </body>
     </html>
   );

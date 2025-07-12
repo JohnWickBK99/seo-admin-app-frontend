@@ -164,7 +164,7 @@ export default function PostForm({
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
           <TabsContent value="edit">
-            <Textarea id="content" rows={6} {...register("content")} />
+            <Textarea id="content" rows={15} {...register("content")} />
           </TabsContent>
           <TabsContent value="preview">
             <Card>
