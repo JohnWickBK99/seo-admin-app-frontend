@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { ContentRenderer } from "@/components/ContentRenderer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,12 +24,13 @@ interface Post {
   image_alt?: string;
 }
 
-export default function PostDetailPage({ params }: { params: { id: string } }) {
+export default function PostDetailPage() {
+  const params = useParams();
   const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const id = params.id;
+  const id = params.id as string;
 
   useEffect(() => {
     async function fetchPost() {
@@ -48,7 +49,9 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
       }
     }
 
-    fetchPost();
+    if (id) {
+      fetchPost();
+    }
   }, [id]);
 
   const handleDelete = async () => {

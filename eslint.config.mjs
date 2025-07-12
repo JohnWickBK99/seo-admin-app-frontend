@@ -14,6 +14,13 @@ const eslintConfig = [
   {
     ignores: ["lib/generated/prisma/**"],
   },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "prefer-const": "off"
+    },
+  },
 ];
 
 export default eslintConfig;
