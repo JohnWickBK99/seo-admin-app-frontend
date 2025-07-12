@@ -21,6 +21,8 @@ model blog_posts {
   category     String?   @db.VarChar(100)
   featured     Boolean?  @default(false)
   published    Boolean?  @default(true)
+  image_url    String?   @db.VarChar(500)
+  image_alt    String?   @db.VarChar(255)
 
   @@index([category], map: "idx_blog_posts_category")
   @@index([published], map: "idx_blog_posts_published")

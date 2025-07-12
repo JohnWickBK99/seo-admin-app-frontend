@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ContentRenderer } from "@/components/ContentRenderer";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 // Import shadcn-ui components
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ const PostSchema = z.object({
   author: z.string().min(1, { message: "Author is required" }),
   category: z.string().optional(),
   read_time: z.string().optional(),
+  image_url: z.string().optional().nullable(),
+  image_alt: z.string().optional().nullable(),
   featured: z.boolean().default(false),
   published: z.boolean().default(true),
 });
@@ -60,6 +63,8 @@ export default function PostForm({
       author: initialData?.author || "",
       category: initialData?.category || "",
       read_time: initialData?.read_time || "",
+      image_url: initialData?.image_url || null,
+      image_alt: initialData?.image_alt || "",
       featured: initialData?.featured ?? false,
       published: initialData?.published ?? true,
     },
@@ -73,6 +78,7 @@ export default function PostForm({
   const titleValue = watch("title");
   const slugValue = watch("slug");
   const contentValue = watch("content");
+  const imageUrlValue = watch("image_url");
 
   // Slugify function
   function slugify(str: string) {
@@ -157,6 +163,23 @@ export default function PostForm({
       </div>
 
       <div className="space-y-2">
+        <Label>Featured Image</Label>
+        <ImageUpload
+          value={imageUrlValue}
+          onChange={(url) => setValue("image_url", url)}
+          disabled={isSubmitting}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="image_alt">Image Alt Text</Label>
+        <Input id="image_alt" {...register("image_alt")} />
+        <p className="text-xs text-muted-foreground">
+          Mô tả ngắn về ảnh để tối ưu SEO
+        </p>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="content">Content</Label>
         <Tabs defaultValue="edit" className="w-full">
           <TabsList className="grid grid-cols-2 mb-2">
@@ -170,7 +193,11 @@ export default function PostForm({
             <Card>
               <CardContent className="p-4">
                 {contentValue ? (
-                  <ContentRenderer content={contentValue} showDebug={true} />
+                  <ContentRenderer
+                    content={contentValue}
+                    showDebug={true}
+                    featuredImage={imageUrlValue}
+                  />
                 ) : (
                   <p className="text-muted-foreground italic">
                     No content to preview

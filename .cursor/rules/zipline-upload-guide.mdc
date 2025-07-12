@@ -1,0 +1,246 @@
+---
+description: upload file ảnh lên Zipline với Next.js App Router
+alwaysApply: false
+---
+# Hướng dẫn upload file ảnh lên Zipline với Next.js App Router
+
+## 0. Cấu hình môi trường (.env)
+- Nếu chưa có file `.env` ở project, hãy tạo file này ở thư mục gốc.
+- Thêm các biến sau vào `.env`:
+  ```env
+  ZIPLINE_API_URL=https://zipline.example.com   # Thay bằng URL Zipline của bạn
+  ZIPLINE_API_KEY=YOUR_API_KEY                  # Thay bằng API key của bạn
+  ```
+- Khi dùng trong code, lấy giá trị qua `process.env.ZIPLINE_API_URL` và `process.env.ZIPLINE_API_KEY`.
+
+## 1. API upload trong Next.js App Router (`app/api/upload/route.ts`)
+- Sử dụng `req.formData()` để lấy file từ request.
+- Lưu file tạm ra ổ đĩa, tạo lại FormData, gửi lên Zipline bằng axios.
+- Xoá file tạm sau khi upload.
+
+### Ví dụ:
+```ts
+import { NextResponse } from 'next/server';
+import FormData from 'form-data';
+import fs from 'fs';
+import axios from 'axios';
+
+export const config = {
+  api: { bodyParser: false },
+};
+
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file');
+    if (!file || typeof file === 'string') {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const tempPath = `/tmp/${file.name}`;
+    fs.writeFileSync(tempPath, buffer);
+    const uploadForm = new FormData();
+    uploadForm.append('file', fs.createReadStream(tempPath), file.name);
+    const ziplineRes = await axios.post(
+      `${process.env.ZIPLINE_API_URL}/api/upload`,
+      uploadForm,
+      {
+        headers: {
+          ...uploadForm.getHeaders(),
+          'Authorization': process.env.ZIPLINE_API_KEY,
+        },
+      }
+    );
+    fs.unlinkSync(tempPath);
+    return NextResponse.json(ziplineRes.data.files[0]);
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'Upload error' }, { status: 500 });
+  }
+}
+```
+
+## 2. Ví dụ client Next.js gọi API upload
+- Giao diện upload file, gửi POST tới `/api/upload`:
+
+```tsx
+'use client';
+import React, { useState } from 'react';
+
+export default function UploadForm() {
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResult(null);
+    setError(null);
+    if (!file) {
+      setError('Vui lòng chọn file ảnh!');
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Lỗi upload!');
+      } else {
+        setResult(data);
+      }
+    } catch (err) {
+      setError((err as Error).message || 'Lỗi không xác định!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <button type="submit" disabled={loading}>
+        {loading ? 'Đang upload...' : 'Upload'}
+      </button>
+      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {result && <pre>{JSON.stringify(result, null, 2)}</pre>}
+    </form>
+  );
+}
+```
+
+---
+**Chỉ cần làm theo 2 phần trên là bạn đã upload file lên Zipline an toàn, bảo mật qua Next.js App Router!**
+# Hướng dẫn upload file ảnh lên Zipline với Next.js App Router
+
+## 0. Cấu hình môi trường (.env)
+- Nếu chưa có file `.env` ở project, hãy tạo file này ở thư mục gốc.
+- Thêm các biến sau vào `.env`:
+  ```env
+  ZIPLINE_API_URL=https://zipline.example.com   # Thay bằng URL Zipline của bạn
+  ZIPLINE_API_KEY=YOUR_API_KEY                  # Thay bằng API key của bạn
+  ```
+- Khi dùng trong code, lấy giá trị qua `process.env.ZIPLINE_API_URL` và `process.env.ZIPLINE_API_KEY`.
+
+## 1. API upload trong Next.js App Router (`app/api/upload/route.ts`)
+- Sử dụng `req.formData()` để lấy file từ request.
+- Lưu file tạm ra ổ đĩa, tạo lại FormData, gửi lên Zipline bằng axios.
+- Xoá file tạm sau khi upload.
+
+### Ví dụ:
+```ts
+import { NextResponse } from 'next/server';
+import FormData from 'form-data';
+import fs from 'fs';
+import axios from 'axios';
+
+export const config = {
+  api: { bodyParser: false },
+};
+
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file');
+    if (!file || typeof file === 'string') {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const tempPath = `/tmp/${file.name}`;
+    fs.writeFileSync(tempPath, buffer);
+    const uploadForm = new FormData();
+    uploadForm.append('file', fs.createReadStream(tempPath), file.name);
+    const ziplineRes = await axios.post(
+      `${process.env.ZIPLINE_API_URL}/api/upload`,
+      uploadForm,
+      {
+        headers: {
+          ...uploadForm.getHeaders(),
+          'Authorization': process.env.ZIPLINE_API_KEY,
+        },
+      }
+    );
+    fs.unlinkSync(tempPath);
+    return NextResponse.json(ziplineRes.data.files[0]);
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'Upload error' }, { status: 500 });
+  }
+}
+```
+
+## 2. Ví dụ client Next.js gọi API upload
+- Giao diện upload file, gửi POST tới `/api/upload`:
+
+```tsx
+'use client';
+import React, { useState } from 'react';
+
+export default function UploadForm() {
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResult(null);
+    setError(null);
+    if (!file) {
+      setError('Vui lòng chọn file ảnh!');
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Lỗi upload!');
+      } else {
+        setResult(data);
+      }
+    } catch (err) {
+      setError((err as Error).message || 'Lỗi không xác định!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <button type="submit" disabled={loading}>
+        {loading ? 'Đang upload...' : 'Upload'}
+      </button>
+      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {result && <pre>{JSON.stringify(result, null, 2)}</pre>}
+    </form>
+  );
+}
+```
+
+---
+**Chỉ cần làm theo 2 phần trên là bạn đã upload file lên Zipline an toàn, bảo mật qua Next.js App Router!**

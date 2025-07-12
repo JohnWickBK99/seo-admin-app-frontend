@@ -3,6 +3,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Image from "next/image";
 import {
   detectContentType,
   detectContentTypeWithConfidence,
@@ -12,12 +13,16 @@ interface ContentRendererProps {
   content: string;
   className?: string;
   showDebug?: boolean;
+  featuredImage?: string | null;
+  imageAlt?: string;
 }
 
 export function ContentRenderer({
   content,
   className = "",
   showDebug = false,
+  featuredImage,
+  imageAlt = "Featured image",
 }: ContentRendererProps) {
   const detection = detectContentTypeWithConfidence(content);
   const contentType = detectContentType(content);
@@ -33,12 +38,25 @@ export function ContentRenderer({
       </div>
     ) : null;
 
+  // Render featured image if available
+  const featuredImageComponent = featuredImage ? (
+    <div className="relative w-full h-[300px] mb-6">
+      <Image
+        src={featuredImage}
+        fill
+        alt={imageAlt}
+        className="object-cover rounded-md"
+      />
+    </div>
+  ) : null;
+
   // Render based on content type
   switch (contentType) {
     case "markdown":
       return (
         <div className={className}>
           {debugInfo}
+          {featuredImageComponent}
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -159,6 +177,7 @@ export function ContentRenderer({
       return (
         <div className={className}>
           {debugInfo}
+          {featuredImageComponent}
           <div
             className="prose prose-lg max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: content }}
@@ -171,6 +190,7 @@ export function ContentRenderer({
       return (
         <div className={className}>
           {debugInfo}
+          {featuredImageComponent}
           <div className="prose prose-lg max-w-none dark:prose-invert">
             <p className="whitespace-pre-wrap text-foreground">{content}</p>
           </div>
