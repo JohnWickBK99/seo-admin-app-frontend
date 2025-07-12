@@ -42,6 +42,7 @@ export default function PostsPerMonthChart({ data }: { data: MonthStat[] }) {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,

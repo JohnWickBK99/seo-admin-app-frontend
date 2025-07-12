@@ -2,6 +2,13 @@ export const dynamic = "force-dynamic"; // cách 1: ép Next.js render mỗi req
 
 import { prisma } from "@/lib/prisma";
 import PostsPerMonthChart from "@/components/PostsPerMonthChart";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function DashboardPage() {
   // Đếm tổng số bài, số đã publish, số draft
@@ -54,29 +61,60 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="p-6 space-y-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-lg bg-blue-600 text-white p-6">
-          <p className="text-sm uppercase">Total Posts</p>
-          <p className="text-3xl font-bold">{total ?? "—"}</p>
-        </div>
-        <div className="rounded-lg bg-green-600 text-white p-6">
-          <p className="text-sm uppercase">Published</p>
-          <p className="text-3xl font-bold">{publishedCount ?? "—"}</p>
-        </div>
-        <div className="rounded-lg bg-yellow-500 text-white p-6">
-          <p className="text-sm uppercase">Drafts</p>
-          <p className="text-3xl font-bold">{draftCount ?? "—"}</p>
-        </div>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{total ?? "—"}</div>
+            <p className="text-xs text-muted-foreground">
+              All posts in the database
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Published</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{publishedCount ?? "—"}</div>
+            <p className="text-xs text-muted-foreground">
+              Posts visible to readers
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{draftCount ?? "—"}</div>
+            <p className="text-xs text-muted-foreground">Unpublished posts</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Chart */}
-      <div className="bg-white/5 border border-white/10 rounded-lg p-4 backdrop-blur-lg">
-        <PostsPerMonthChart data={monthStats} />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Posts Per Month</CardTitle>
+          <CardDescription>
+            Number of posts published in the last 6 months
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pl-2">
+          <div className="h-[300px]">
+            <PostsPerMonthChart data={monthStats} />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

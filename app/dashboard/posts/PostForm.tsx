@@ -1,12 +1,22 @@
 "use client";
 
-import { useForm, Resolver, SubmitHandler } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { ContentRenderer } from "@/components/ContentRenderer";
 
+// Import shadcn-ui components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
+// Define schema
 const PostSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   slug: z.string().min(1, { message: "Slug is required" }),
@@ -19,44 +29,52 @@ const PostSchema = z.object({
   published: z.boolean().default(true),
 });
 
-type PostValues = z.infer<typeof PostSchema>;
+type PostFormValues = z.infer<typeof PostSchema>;
+
+interface PostFormProps {
+  initialData?: Partial<PostFormValues> & { id?: string };
+  isEdit?: boolean;
+}
 
 export default function PostForm({
   initialData,
   isEdit = false,
-}: {
-  initialData?: Partial<PostValues> & { id?: string };
-  isEdit?: boolean;
-}) {
+}: PostFormProps) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [contentView, setContentView] = useState<"edit" | "preview">("edit");
+  const [featuredChecked, setFeaturedChecked] = useState<boolean>(
+    initialData?.featured ?? false
+  );
+  const [publishedChecked, setPublishedChecked] = useState<boolean>(
+    initialData?.published ?? true
+  );
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue,
-  } = useForm<PostValues>({
-    resolver: zodResolver(PostSchema) as Resolver<PostValues>,
-    defaultValues: initialData ?? {
-      title: "",
-      slug: "",
-      excerpt: "",
-      content: "",
-      author: "",
-      category: "",
-      read_time: "",
-      featured: false,
-      published: true,
+  // Create form with type assertion to avoid complex type issues
+  const form = useForm({
+    resolver: zodResolver(PostSchema) as any,
+    defaultValues: {
+      title: initialData?.title || "",
+      slug: initialData?.slug || "",
+      excerpt: initialData?.excerpt || "",
+      content: initialData?.content || "",
+      author: initialData?.author || "",
+      category: initialData?.category || "",
+      read_time: initialData?.read_time || "",
+      featured: initialData?.featured ?? false,
+      published: initialData?.published ?? true,
     },
   });
 
+  // Extract form methods
+  const { register, handleSubmit, formState, watch, setValue } = form;
+  const { errors, isSubmitting } = formState;
+
+  // Watch values for preview and slug generation
   const titleValue = watch("title");
   const slugValue = watch("slug");
   const contentValue = watch("content");
 
+  // Slugify function
   function slugify(str: string) {
     return str
       .toLowerCase()
@@ -66,7 +84,7 @@ export default function PostForm({
       .replace(/-+/g, "-");
   }
 
-  // Sync slug in effect to tránh loop setValue trong render
+  // Auto-generate slug from title
   useEffect(() => {
     const auto = slugify(titleValue);
     if (!slugValue || slugValue === auto) {
@@ -75,167 +93,162 @@ export default function PostForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titleValue]);
 
-  const onSubmit: SubmitHandler<PostValues> = async (values) => {
-    setErrorMessage(null);
-    const endpoint = isEdit ? `/api/blogs/${initialData?.id}` : "/api/blogs";
-    const method = isEdit ? "PUT" : "POST";
+  // Form submission handler
+  const onSubmit = async (data: any) => {
+    try {
+      setErrorMessage(null);
+      const endpoint = isEdit ? `/api/blogs/${initialData?.id}` : "/api/blogs";
+      const method = isEdit ? "PUT" : "POST";
 
-    const res = await fetch(endpoint, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          featured: featuredChecked,
+          published: publishedChecked,
+        }),
+      });
 
-    if (!res.ok) {
-      const { message } = await res.json();
-      setErrorMessage(message ?? "Something went wrong");
-      return;
+      if (!res.ok) {
+        const responseData = await res.json();
+        setErrorMessage(responseData.message ?? "Something went wrong");
+        return;
+      }
+
+      // Navigate back to posts list on success
+      router.push("/dashboard/posts");
+    } catch (error) {
+      setErrorMessage("An unexpected error occurred");
+      console.error(error);
     }
-
-    // thành công → quay lại danh sách
-    router.push("/dashboard/posts");
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium">Title</label>
-        <input
-          className="w-full rounded border px-3 py-2"
-          {...register("title")}
-        />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
+        <Input id="title" {...register("title")} />
         {errors.title && (
-          <p className="text-sm text-red-600">{errors.title.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.title?.message as string}
+          </p>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Slug</label>
-        <input
-          className="w-full rounded border px-3 py-2"
-          {...register("slug")}
-        />
+      <div className="space-y-2">
+        <Label htmlFor="slug">Slug</Label>
+        <Input id="slug" {...register("slug")} />
         {errors.slug && (
-          <p className="text-sm text-red-600">{errors.slug.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.slug?.message as string}
+          </p>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Excerpt</label>
-        <textarea
-          rows={3}
-          className="w-full rounded border px-3 py-2"
-          {...register("excerpt")}
-        />
+      <div className="space-y-2">
+        <Label htmlFor="excerpt">Excerpt</Label>
+        <Textarea id="excerpt" rows={3} {...register("excerpt")} />
         {errors.excerpt && (
-          <p className="text-sm text-red-600">{errors.excerpt.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.excerpt?.message as string}
+          </p>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Content</label>
-
-        {/* Tabs để chọn chế độ xem */}
-        <div className="flex mb-2 border-b">
-          <button
-            type="button"
-            onClick={() => setContentView("edit")}
-            className={`px-4 py-2 ${
-              contentView === "edit"
-                ? "text-blue-600 border-b-2 border-blue-600 font-medium"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Chỉnh sửa
-          </button>
-          <button
-            type="button"
-            onClick={() => setContentView("preview")}
-            className={`px-4 py-2 ${
-              contentView === "preview"
-                ? "text-blue-600 border-b-2 border-blue-600 font-medium"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Xem trước
-          </button>
-        </div>
-
-        {/* Hiển thị content dựa trên chế độ xem */}
-        {contentView === "edit" ? (
-          <textarea
-            rows={6}
-            className="w-full rounded border px-3 py-2"
-            {...register("content")}
-          />
-        ) : (
-          <div className="border rounded p-4 min-h-[200px] bg-white">
-            {contentValue ? (
-              <ContentRenderer content={contentValue} showDebug={true} />
-            ) : (
-              <p className="text-gray-500 italic">
-                Chưa có nội dung để xem trước
-              </p>
-            )}
-          </div>
-        )}
-
+      <div className="space-y-2">
+        <Label htmlFor="content">Content</Label>
+        <Tabs defaultValue="edit" className="w-full">
+          <TabsList className="grid grid-cols-2 mb-2">
+            <TabsTrigger value="edit">Edit</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="edit">
+            <Textarea id="content" rows={6} {...register("content")} />
+          </TabsContent>
+          <TabsContent value="preview">
+            <Card>
+              <CardContent className="p-4">
+                {contentValue ? (
+                  <ContentRenderer content={contentValue} showDebug={true} />
+                ) : (
+                  <p className="text-muted-foreground italic">
+                    No content to preview
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         {errors.content && (
-          <p className="text-sm text-red-600">{errors.content.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.content?.message as string}
+          </p>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium">Author</label>
-          <input
-            className="w-full rounded border px-3 py-2"
-            {...register("author")}
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="author">Author</Label>
+          <Input id="author" {...register("author")} />
           {errors.author && (
-            <p className="text-sm text-red-600">{errors.author.message}</p>
+            <p className="text-sm text-destructive">
+              {errors.author?.message as string}
+            </p>
           )}
         </div>
-        <div>
-          <label className="block text-sm font-medium">Category</label>
-          <input
-            className="w-full rounded border px-3 py-2"
-            {...register("category")}
-          />
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Input id="category" {...register("category")} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium">Read Time</label>
-          <input
-            className="w-full rounded border px-3 py-2"
-            {...register("read_time")}
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="read_time">Read Time</Label>
+          <Input id="read_time" {...register("read_time")} />
         </div>
-        <div className="flex items-center space-x-4">
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" {...register("featured")} />
-            <span>Featured</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" {...register("published")} />
-            <span>Published</span>
-          </label>
+
+        <div className="flex items-center space-x-6 pt-6">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="featured"
+              checked={featuredChecked}
+              onCheckedChange={(checked) => {
+                setFeaturedChecked(checked === true);
+                setValue("featured", checked === true);
+              }}
+            />
+            <Label htmlFor="featured" className="cursor-pointer">
+              Featured
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="published"
+              checked={publishedChecked}
+              onCheckedChange={(checked) => {
+                setPublishedChecked(checked === true);
+                setValue("published", checked === true);
+              }}
+            />
+            <Label htmlFor="published" className="cursor-pointer">
+              Published
+            </Label>
+          </div>
         </div>
       </div>
 
       {errorMessage && (
-        <p className="text-center text-red-600 text-sm">{errorMessage}</p>
+        <p className="text-center text-destructive text-sm">{errorMessage}</p>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Saving..." : isEdit ? "Update Post" : "Create Post"}
-      </button>
+      </Button>
     </form>
   );
 }
+

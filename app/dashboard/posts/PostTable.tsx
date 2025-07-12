@@ -1,6 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 interface Post {
   id: string;
@@ -27,51 +36,44 @@ export default function PostTable({ posts }: { posts: Post[] }) {
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-        <thead className="bg-white/10 text-gray-300">
-          <tr>
-            <th className="px-4 py-2 text-left">Title</th>
-            <th className="px-4 py-2 text-left">Author</th>
-            <th className="px-4 py-2">Published</th>
-            <th className="px-4 py-2">Date</th>
-            <th className="px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((post) => (
-            <tr
-              key={post.id}
-              className="odd:bg-white/5 even:bg-white/10 hover:bg-white/20 transition"
-            >
-              <td className="px-4 py-2 whitespace-nowrap">{post.title}</td>
-              <td className="px-4 py-2 whitespace-nowrap">{post.author}</td>
-              <td className="px-4 py-2 text-center">
-                {post.published ? "✔️" : "❌"}
-              </td>
-              <td className="px-4 py-2 whitespace-nowrap">
-                {post.published_at
-                  ? new Date(post.published_at).toLocaleDateString()
-                  : "—"}
-              </td>
-              <td className="px-4 py-2 space-x-2 text-center">
-                <a
-                  href={`/dashboard/posts/${post.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </a>
-                <button
-                  onClick={() => handleDelete(post.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Title</TableHead>
+          <TableHead>Author</TableHead>
+          <TableHead className="text-center">Published</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead className="text-center">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((post) => (
+          <TableRow key={post.id}>
+            <TableCell className="font-medium">{post.title}</TableCell>
+            <TableCell>{post.author}</TableCell>
+            <TableCell className="text-center">
+              {post.published ? "✔️" : "❌"}
+            </TableCell>
+            <TableCell>
+              {post.published_at
+                ? new Date(post.published_at).toLocaleDateString()
+                : "—"}
+            </TableCell>
+            <TableCell className="flex justify-center space-x-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href={`/dashboard/posts/${post.id}`}>Edit</a>
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(post.id)}
+              >
+                Delete
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
