@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { ContentRenderer } from "@/components/ContentRenderer";
 
 const PostSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -29,6 +30,7 @@ export default function PostForm({
 }) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [contentView, setContentView] = useState<"edit" | "preview">("edit");
 
   const {
     register,
@@ -53,6 +55,7 @@ export default function PostForm({
 
   const titleValue = watch("title");
   const slugValue = watch("slug");
+  const contentValue = watch("content");
 
   function slugify(str: string) {
     return str
@@ -131,11 +134,52 @@ export default function PostForm({
 
       <div>
         <label className="block text-sm font-medium">Content</label>
-        <textarea
-          rows={6}
-          className="w-full rounded border px-3 py-2"
-          {...register("content")}
-        />
+
+        {/* Tabs để chọn chế độ xem */}
+        <div className="flex mb-2 border-b">
+          <button
+            type="button"
+            onClick={() => setContentView("edit")}
+            className={`px-4 py-2 ${
+              contentView === "edit"
+                ? "text-blue-600 border-b-2 border-blue-600 font-medium"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Chỉnh sửa
+          </button>
+          <button
+            type="button"
+            onClick={() => setContentView("preview")}
+            className={`px-4 py-2 ${
+              contentView === "preview"
+                ? "text-blue-600 border-b-2 border-blue-600 font-medium"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Xem trước
+          </button>
+        </div>
+
+        {/* Hiển thị content dựa trên chế độ xem */}
+        {contentView === "edit" ? (
+          <textarea
+            rows={6}
+            className="w-full rounded border px-3 py-2"
+            {...register("content")}
+          />
+        ) : (
+          <div className="border rounded p-4 min-h-[200px] bg-white">
+            {contentValue ? (
+              <ContentRenderer content={contentValue} showDebug={true} />
+            ) : (
+              <p className="text-gray-500 italic">
+                Chưa có nội dung để xem trước
+              </p>
+            )}
+          </div>
+        )}
+
         {errors.content && (
           <p className="text-sm text-red-600">{errors.content.message}</p>
         )}
