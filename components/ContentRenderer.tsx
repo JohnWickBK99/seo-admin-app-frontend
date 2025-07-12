@@ -25,7 +25,7 @@ export function ContentRenderer({
   // Debug information (only shown in development)
   const debugInfo =
     showDebug && process.env.NODE_ENV === "development" ? (
-      <div className="mb-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
+      <div className="mb-4 p-3 bg-secondary/80 rounded text-xs text-foreground">
         <strong>Content Type Detection:</strong> {contentType} (confidence:{" "}
         {Math.round(detection.confidence * 100)}%)
         <br />
@@ -44,45 +44,47 @@ export function ContentRenderer({
             components={{
               // Custom styling for markdown elements
               h1: ({ children }) => (
-                <h1 className="text-3xl font-bold mb-4 text-gray-900">
+                <h1 className="text-3xl font-bold mb-4 text-foreground">
                   {children}
                 </h1>
               ),
               h2: ({ children }) => (
-                <h2 className="text-2xl font-bold mb-3 text-gray-900">
+                <h2 className="text-2xl font-bold mb-3 text-foreground">
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 className="text-xl font-bold mb-2 text-gray-900">
+                <h3 className="text-xl font-bold mb-2 text-foreground">
                   {children}
                 </h3>
               ),
               h4: ({ children }) => (
-                <h4 className="text-lg font-bold mb-2 text-gray-900">
+                <h4 className="text-lg font-bold mb-2 text-foreground">
                   {children}
                 </h4>
               ),
               h5: ({ children }) => (
-                <h5 className="text-base font-bold mb-2 text-gray-900">
+                <h5 className="text-base font-bold mb-2 text-foreground">
                   {children}
                 </h5>
               ),
               h6: ({ children }) => (
-                <h6 className="text-sm font-bold mb-2 text-gray-900">
+                <h6 className="text-sm font-bold mb-2 text-foreground">
                   {children}
                 </h6>
               ),
               p: ({ children }) => (
-                <p className="mb-4 leading-relaxed text-gray-700">{children}</p>
+                <p className="mb-4 leading-relaxed text-foreground">
+                  {children}
+                </p>
               ),
               ul: ({ children }) => (
-                <ul className="list-disc list-inside mb-4 space-y-1 text-gray-700">
+                <ul className="list-disc list-inside mb-4 space-y-1 text-foreground">
                   {children}
                 </ul>
               ),
               ol: ({ children }) => (
-                <ol className="list-decimal list-inside mb-4 space-y-1 text-gray-700">
+                <ol className="list-decimal list-inside mb-4 space-y-1 text-foreground">
                   {children}
                 </ol>
               ),
@@ -90,31 +92,31 @@ export function ContentRenderer({
               code: ({ children, className }) => {
                 const isInline = !className;
                 return isInline ? (
-                  <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">
+                  <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-primary">
                     {children}
                   </code>
                 ) : (
                   <code
-                    className={`${className} bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800`}
+                    className={`${className} bg-muted px-2 py-1 rounded text-sm font-mono text-primary`}
                   >
                     {children}
                   </code>
                 );
               },
               pre: ({ children }) => (
-                <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 font-mono text-sm">
+                <pre className="bg-muted p-4 rounded-lg overflow-x-auto mb-4 font-mono text-sm text-foreground">
                   {children}
                 </pre>
               ),
               blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-blue-500 pl-4 italic mb-4 text-gray-700 bg-blue-50 py-2">
+                <blockquote className="border-l-4 border-primary pl-4 italic mb-4 text-foreground bg-secondary/40 py-2">
                   {children}
                 </blockquote>
               ),
               a: ({ href, children }) => (
                 <a
                   href={href}
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-primary hover:text-primary/80 underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -122,25 +124,29 @@ export function ContentRenderer({
                 </a>
               ),
               strong: ({ children }) => (
-                <strong className="font-bold text-gray-900">{children}</strong>
+                <strong className="font-bold text-foreground">
+                  {children}
+                </strong>
               ),
               em: ({ children }) => (
-                <em className="italic text-gray-800">{children}</em>
+                <em className="italic text-foreground">{children}</em>
               ),
               table: ({ children }) => (
                 <div className="overflow-x-auto mb-4">
-                  <table className="min-w-full border border-gray-300">
+                  <table className="min-w-full border border-border">
                     {children}
                   </table>
                 </div>
               ),
               th: ({ children }) => (
-                <th className="border border-gray-300 px-4 py-2 bg-gray-100 font-bold text-left">
+                <th className="border border-border px-4 py-2 bg-muted font-bold text-left text-foreground">
                   {children}
                 </th>
               ),
               td: ({ children }) => (
-                <td className="border border-gray-300 px-4 py-2">{children}</td>
+                <td className="border border-border px-4 py-2 text-foreground">
+                  {children}
+                </td>
               ),
             }}
           >
@@ -154,7 +160,7 @@ export function ContentRenderer({
         <div className={className}>
           {debugInfo}
           <div
-            className="prose prose-lg max-w-none"
+            className="prose prose-lg max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: content }}
           />
         </div>
@@ -165,8 +171,8 @@ export function ContentRenderer({
       return (
         <div className={className}>
           {debugInfo}
-          <div className="prose prose-lg max-w-none">
-            <p className="whitespace-pre-wrap text-gray-700">{content}</p>
+          <div className="prose prose-lg max-w-none dark:prose-invert">
+            <p className="whitespace-pre-wrap text-foreground">{content}</p>
           </div>
         </div>
       );
