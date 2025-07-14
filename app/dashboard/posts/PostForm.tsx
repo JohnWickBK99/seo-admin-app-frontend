@@ -56,6 +56,7 @@ export default function PostForm({
     initialData?.published ?? true
   );
   const [showUrlImport, setShowUrlImport] = useState<boolean>(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Create form with type assertion to avoid complex type issues
   const form = useForm({
@@ -185,6 +186,46 @@ export default function PostForm({
     setShowUrlImport(false);
   };
 
+  // Translate content from Vietnamese to English
+  const handleTranslateContent = async () => {
+    try {
+      setIsTranslating(true);
+      const currentContent = form.getValues("content");
+
+      if (!currentContent.trim()) {
+        setErrorMessage("Không có nội dung để dịch");
+        setIsTranslating(false);
+        return;
+      }
+
+      const response = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: currentContent }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || "Lỗi khi dịch nội dung");
+        setIsTranslating(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data.translated) {
+        setValue("content", data.data.translated);
+        setErrorMessage(null);
+      } else {
+        setErrorMessage("Không thể dịch nội dung");
+      }
+    } catch (error) {
+      console.error("Translation error:", error);
+      setErrorMessage("Đã xảy ra lỗi khi dịch nội dung");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
     <form
       onSubmit={(e) => {
@@ -261,32 +302,46 @@ export default function PostForm({
 
       <div className="space-y-2">
         <Label htmlFor="content">Content</Label>
-        <Tabs defaultValue="edit" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-2">
-            <TabsTrigger value="edit">Edit</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-          </TabsList>
-          <TabsContent value="edit">
-            <Textarea id="content" rows={15} {...register("content")} />
-          </TabsContent>
-          <TabsContent value="preview">
-            <Card>
-              <CardContent className="p-4">
-                {contentValue ? (
-                  <ContentRenderer
-                    content={contentValue}
-                    showDebug={true}
-                    featuredImage={imageUrlValue}
-                  />
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    No content to preview
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div className="flex justify-between items-center mb-2">
+          <Tabs defaultValue="edit" className="w-full">
+            <div className="flex justify-between items-center">
+              <TabsList className="grid grid-cols-2 w-48">
+                <TabsTrigger value="edit">Edit</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleTranslateContent}
+                disabled={isTranslating}
+                className="ml-2"
+              >
+                {isTranslating ? "Đang dịch..." : "Translate to English"}
+              </Button>
+            </div>
+            <TabsContent value="edit">
+              <Textarea id="content" rows={15} {...register("content")} />
+            </TabsContent>
+            <TabsContent value="preview">
+              <Card>
+                <CardContent className="p-4">
+                  {contentValue ? (
+                    <ContentRenderer
+                      content={contentValue}
+                      showDebug={true}
+                      featuredImage={imageUrlValue}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground italic">
+                      No content to preview
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
         {errors.content && (
           <p className="text-sm text-destructive">
             {errors.content?.message as string}
