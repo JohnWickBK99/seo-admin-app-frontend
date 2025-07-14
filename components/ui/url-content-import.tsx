@@ -19,7 +19,9 @@ interface UrlContentImportProps {
   }) => void;
 }
 
-export function UrlContentImport({ onContentGenerated }: UrlContentImportProps) {
+export function UrlContentImport({
+  onContentGenerated,
+}: UrlContentImportProps) {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +50,27 @@ export function UrlContentImport({ onContentGenerated }: UrlContentImportProps) 
         body: JSON.stringify({ url }),
       });
 
-      if (!scrapeResponse.ok) {
-        const error = await scrapeResponse.json();
-        throw new Error(error.message || "Lỗi khi lấy nội dung từ URL");
-      }
-
       const { result } = await scrapeResponse.json();
+
+      if (!scrapeResponse.ok || result?.error) {
+        // Gọi API generate để tạo nội dung blog từ HTML
+        const firecrawlResponse = await fetch("/api/firecrawl", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url }),
+        });
+        if (!firecrawlResponse.ok) {
+          const error = await firecrawlResponse.json();
+          throw new Error(error.message || "Lỗi khi lấy nội dung từ URL");
+        }
+        const content = await firecrawlResponse.json();
+        onContentGenerated(content);
+        return;
+        // const error = await scrapeResponse.json();
+        // throw new Error(error.message || "Lỗi khi lấy nội dung từ URL");
+      }
 
       // Gọi API generate để tạo nội dung blog từ HTML
       const generateResponse = await fetch("/api/generate", {
@@ -81,7 +98,7 @@ export function UrlContentImport({ onContentGenerated }: UrlContentImportProps) 
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log("Form submit triggered"); 
+    console.log("Form submit triggered");
     e.preventDefault();
     await processUrl();
   };
@@ -99,8 +116,8 @@ export function UrlContentImport({ onContentGenerated }: UrlContentImportProps) 
             disabled={isLoading}
             className="flex-1"
           />
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             disabled={isLoading || !url.trim()}
             onClick={processUrl}
           >
@@ -116,9 +133,7 @@ export function UrlContentImport({ onContentGenerated }: UrlContentImportProps) 
         </div>
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </form>
   );
-} 
+}
